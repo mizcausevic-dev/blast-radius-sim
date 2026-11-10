@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Blast Radius Sim: what breaks when this service fails?</title>
+  <meta name="description" content="Click any service to fail it and watch hard and soft dependency failures cascade. Finds single points of failure, tier inversions and cycles.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%230b0c10%27/%3E%3Ccircle cx=%2716%27 cy=%2716%27 r=%276%27 fill=%27%2366fcf1%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <a class="brand" href="./"><span class="dot" aria-hidden="true"></span>Blast Radius Sim</a>
+  <nav><a href="#catalog">Catalog</a><a href="#how">How it works</a><a href="https://github.com/mizcausevic-dev/blast-radius-sim">GitHub</a></nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Platform architecture · Resilience</div>
+    <h1>What breaks when this service goes down?</h1>
+    <p>Click any service to fail it. Hard dependencies take their dependents down. Soft dependencies only degrade them. The analyzer ranks every service by blast radius and flags single points of failure, tier inversions and dependency cycles.</p>
+  </section>
+
+  <div class="grid cols-4" id="tiles" aria-live="polite"></div>
+
+  <section class="card mt-16">
+    <h2>Dependency graph <small>click or press Enter on a node to fail it · solid = hard, dashed = soft · thick border = entrypoint</small></h2>
+    <div class="btn-row mb-10">
+      <button type="button" class="ghost" id="reset">Reset failures</button>
+      <button type="button" class="ghost" id="worst">Fail the most critical service</button>
+    </div>
+    <div class="graph-wrap"><svg class="chart graph" id="graph" role="group" aria-label="Service dependency graph"></svg></div>
+    <div class="legend"><span><i class="lg-down"></i>failed</span><span><i class="lg-cascade"></i>down by cascade</span><span><i class="lg-deg"></i>degraded</span></div>
+  </section>
+
+  <div class="grid cols-2 mt-16">
+    <section class="card">
+      <h2>Architecture risks</h2>
+      <div id="risks"></div>
+    </section>
+    <section class="card">
+      <h2>Criticality ranking <small>each service failed on its own</small></h2>
+      <div class="table-scroll"><table id="rank"><thead><tr>
+        <th>Service</th><th class="num">Tier</th><th class="num">Takes down</th><th class="num">Degrades</th><th class="num">Entrypoints down</th><th class="num">Composite avail.</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+
+  <section class="card mt-16" id="catalog">
+    <h2>Service catalog (JSON) <small>edit and apply; up to 300 services</small></h2>
+    <textarea id="json" rows="14" spellcheck="false" aria-label="Service catalog JSON"></textarea>
+    <div class="btn-row mt-8">
+      <button type="button" id="apply">Apply catalog</button>
+      <button type="button" class="ghost" id="sample">Load sample</button>
+    </div>
+    <div class="error-box" id="err" role="alert"></div>
+  </section>
+
+  <section class="card mt-16" id="how">
+    <h2>How it works</h2>
+    <p>The catalog is a directed graph. Failures propagate to a fixed point. A service is <strong>down</strong> if any hard dependency is down, and <strong>degraded</strong> if a soft dependency is impaired or a hard dependency is degraded. Statuses only ever get worse, so propagation terminates even when the graph has cycles. Cycles are found with Tarjan's strongly connected components algorithm. Composite availability multiplies a service's own availability by that of each hard dependency, assuming failures are independent. Services inside a cycle are left out, because their availability isn't well-defined.</p>
+    <p class="hint">The sample catalog is fictional. It has planted smells (checkout hard-depending on a tier-2 fraud service, a catalog/inventory cycle, and shared data stores every entrypoint needs) so the analyzer has something to find. Everything runs locally in your browser.</p>
+  </section>
+</main>
+
+<footer class="site"><div class="wrap">
+  <span>Built by <a href="https://github.com/mizcausevic-dev">Miz Causevic</a> · Kinetic Gain LLC</span>
+  <span>MIT licensed · zero dependencies</span>
+</div></footer>
+<script type="module" src="src/app.js"></script>
+</body>
+</html>
